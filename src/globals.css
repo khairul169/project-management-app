@@ -58,3 +58,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.mdxeditor {
+  @apply flex flex-col overflow-hidden;
+}
+
+.mdxeditor-toolbar {
+  @apply shrink-0;
+}
+
+.mdxeditor-root-contenteditable {
+  @apply flex-1 overflow-y-auto;
+}
+
+.mdxeditor-contenteditable {
+  @apply !p-0 !py-4 min-h-full;
+}
