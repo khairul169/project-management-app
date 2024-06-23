@@ -41,16 +41,17 @@ const ViewProjectPage = () => {
         </div>
       ) : (
         <ProjectContext.Provider value={project}>
-          <div className="p-4 md:p-8 md:pt-0 flex-1 flex flex-col overflow-hidden">
-            <Tabs className="pb-4" routerPath={`/project/${projectId}`}>
-              <TabsList>
-                <TabsTrigger value="">Description</TabsTrigger>
-                <TabsTrigger value="/tasks">Tasks</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <Tabs
+            className="px-4 md:px-8 pb-4 pt-4 md:pt-0"
+            routerPath={`/project/${projectId}`}
+          >
+            <TabsList>
+              <TabsTrigger value="">Description</TabsTrigger>
+              <TabsTrigger value="/tasks">Tasks</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-            <Outlet />
-          </div>
+          <Outlet />
         </ProjectContext.Provider>
       )}
     </>

@@ -5,7 +5,9 @@ import { Suspense } from "react";
 const MainLayout = () => {
   return (
     <div className="flex h-screen items-stretch overflow-hidden">
-      <Sidebar className="w-[250px] hidden md:flex" />
+      <div className="p-4 hidden md:flex">
+        <Sidebar className="w-[250px] lg:w-[280px] bg-secondary rounded-md" />
+      </div>
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <Suspense>

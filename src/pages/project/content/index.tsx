@@ -38,7 +38,7 @@ const ContentPage = () => {
     <Suspense>
       <MarkdownEditor
         ref={editorRef}
-        className="h-full overflow-hidden"
+        className="h-full overflow-hidden px-4 md:px-8"
         markdown={data.content}
         onChange={onChange}
       />

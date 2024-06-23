@@ -2,27 +2,32 @@ import React from "react";
 import { IconButton } from "../ui/button";
 import UserMenu from "./user-menu";
 import { cn } from "@/lib/utils";
+import MobileSidebar from "./mobile-sidebar";
 
 type Appbar = {
   title?: string | React.ReactElement;
+  leading?: React.ReactNode;
   actions?: React.ReactNode;
 };
 
-const Appbar = ({ title, actions }: Appbar) => {
+const Appbar = ({ title, actions, leading }: Appbar) => {
   return (
     <header className="bg-background border-b md:border-b-0 text-foreground">
-      <div className="hidden md:flex items-center justify-end h-16 px-4">
-        <UserMenu className="hidden md:flex" />
-      </div>
+      <div className="flex items-center gap-3 md:py-4 px-4 flex-wrap">
+        {leading || <MobileSidebar />}
 
-      <div className="flex items-center gap-4 px-4 h-16">
-        {title && typeof title === "string" ? (
-          <AppbarTitle className="flex-1">{title}</AppbarTitle>
-        ) : (
-          <div className="flex-1 truncate">{title}</div>
-        )}
+        <div className="flex-1 hidden md:block" />
+
+        <div className="flex items-center h-16 md:pl-4 md:h-auto md:order-last md:basis-full">
+          {title && typeof title === "string" ? (
+            <AppbarTitle className="flex-1">{title}</AppbarTitle>
+          ) : (
+            <div className="flex-1 truncate">{title}</div>
+          )}
+        </div>
 
         {actions}
+        <UserMenu className="hidden md:flex" />
       </div>
     </header>
   );
@@ -39,9 +44,7 @@ const AppbarTitle = ({
   children: React.ReactNode;
   className?: string;
 }) => (
-  <h1 className={cn("text-lg md:text-2xl truncate md:ml-4", className)}>
-    {children}
-  </h1>
+  <h1 className={cn("text-lg md:text-2xl truncate", className)}>{children}</h1>
 );
 Appbar.Title = AppbarTitle;
 

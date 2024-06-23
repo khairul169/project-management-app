@@ -11,16 +11,12 @@ type TabsProps = React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> & {
 const Tabs = ({ routerPath, ...props }: TabsProps) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const defaultValue = routerPath
-    ? pathname.replace(routerPath, "")
-    : props.defaultValue;
+  const value = routerPath ? pathname.replace(routerPath, "") : undefined;
 
   return (
     <TabsPrimitive.Root
       {...props}
-      defaultValue={
-        routerPath ? pathname.replace(routerPath, "") : defaultValue
-      }
+      value={value}
       onValueChange={(path) => {
         if (routerPath) {
           navigate(routerPath + path);

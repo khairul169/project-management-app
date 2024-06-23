@@ -1,18 +1,17 @@
-import { NotepadText, Plus } from "lucide-react";
 import { useProject } from "../components/context";
-import { useState } from "react";
-import { produce } from "immer";
-import { cn, generateId } from "@/lib/utils";
 import { ProjectTasks } from "@/schema/project";
+import { produce } from "immer";
 import { useDatabase } from "@/context/database";
 import TaskModal from "./task-modal";
-import { IconButton } from "@/components/ui/button";
+import TaskSection from "./task-section";
+import TaskItem from "./task-item";
 import { taskModalStore } from "./stores";
+import { curTimestamp } from "@/lib/utils";
 
 const TasksPage = () => {
   const { data } = useProject();
   const db = useDatabase();
-  const tasks = data.tasks;
+  const { tasks } = data;
 
   const setTasks = async (tasks: ProjectTasks) => {
     try {
@@ -22,24 +21,57 @@ const TasksPage = () => {
     }
   };
 
+  const onAddTask = (sectionId: string) => {
+    taskModalStore.setState({
+      isOpen: true,
+      data: {
+        sectionId,
+        id: "",
+        title: "",
+        description: "",
+        createdAt: curTimestamp(),
+        updatedAt: curTimestamp(),
+      },
+    });
+  };
+
+  const onTaskMove = (
+    sectionId: string,
+    id: string,
+    toSectionId: string,
+    toIndex: number = 0
+  ) => {
+    const res = produce(tasks, (tasks) => {
+      const src = tasks.find((i) => i.id === sectionId);
+      const idx = src?.items?.findIndex((i) => i.id === id);
+      const target =
+        sectionId === toSectionId
+          ? src
+          : tasks.find((i) => i.id === toSectionId);
+
+      if (!src || idx == null || idx < 0 || !target) {
+        return;
+      }
+
+      const task = src.items.splice(idx, 1)[0];
+      target.items.splice(toIndex, 0, task);
+    });
+
+    setTasks(res);
+  };
+
   return (
     <>
-      <div className="flex-1 flex overflow-auto gap-x-4">
-        {tasks?.map((task, idx) => (
+      <div className="flex-1 flex overflow-auto gap-x-4 px-4 md:px-8">
+        {tasks?.map((task) => (
           <TaskSection
             key={task.section}
-            sectionId={idx}
-            title={task.section}
-            tasks={tasks}
-            setTasks={setTasks}
+            data={task}
+            onAddTask={() => onAddTask(task.id)}
+            onTaskMove={onTaskMove}
           >
             {task.items?.map((item) => (
-              <TaskItem
-                key={item.id}
-                sectionId={idx}
-                id={item.id}
-                title={item.title}
-              />
+              <TaskItem key={item.id} sectionId={task.id} data={item} />
             ))}
           </TaskSection>
         ))}
@@ -47,111 +79,6 @@ const TasksPage = () => {
 
       <TaskModal />
     </>
-  );
-};
-
-type TaskSectionProps = {
-  sectionId: number;
-  title: string;
-  children?: React.ReactNode;
-  tasks: ProjectTasks;
-  setTasks: (tasks: ProjectTasks) => Promise<void>;
-};
-
-const TaskSection = ({
-  sectionId,
-  title,
-  children,
-  tasks,
-  setTasks,
-}: TaskSectionProps) => {
-  const [isDragging, setDragging] = useState(false);
-
-  const onAddTask = () => {
-    taskModalStore.setState({
-      isOpen: true,
-      data: {
-        sectionId,
-        id: generateId(),
-        title: "",
-      },
-    });
-  };
-
-  return (
-    <div
-      className={cn(
-        "w-[240px] rounded-md shrink-0 min-h-full",
-        isDragging && "bg-muted/10"
-      )}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        setDragging(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDragging(false);
-
-        const srcSectionId = parseInt(e.dataTransfer.getData("sectionId"));
-        const id = e.dataTransfer.getData("id");
-
-        if (Number.isNaN(srcSectionId) || !id || srcSectionId === sectionId) {
-          return;
-        }
-
-        const itemIdx = tasks[srcSectionId].items.findIndex(
-          (i: any) => i.id === id
-        );
-        if (itemIdx < 0) {
-          return;
-        }
-
-        const newTasks = produce(tasks, (state: any) => {
-          const srcItem = state[srcSectionId].items.splice(itemIdx, 1)[0];
-          state[sectionId].items.push(srcItem);
-        });
-        setTasks(newTasks);
-      }}
-    >
-      <div className="bg-muted/50 rounded-md py-2 px-4 flex items-center justify-between">
-        <p className="truncate flex-1">{title}</p>
-        <IconButton icon={<Plus />} onClick={onAddTask} />
-      </div>
-      <div className="space-y-3 w-full mt-4">{children}</div>
-    </div>
-  );
-};
-
-type TaskItemProps = {
-  sectionId: number;
-  id: string;
-  title: string;
-};
-
-const TaskItem = ({ sectionId, id, title }: TaskItemProps) => {
-  return (
-    <div
-      className="border rounded-md p-4 hover:bg-muted/40 transition-colors cursor-pointer"
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("sectionId", String(sectionId));
-        e.dataTransfer.setData("id", id);
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        taskModalStore.setState({
-          isOpen: true,
-          data: { sectionId, id, title },
-        });
-      }}
-    >
-      <NotepadText className="text-muted-foreground" size={24} />
-      <p className="mt-2 text-lg">{title}</p>
-    </div>
   );
 };
 

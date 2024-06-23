@@ -1,8 +1,9 @@
+import { Task } from "@/schema/project";
 import { createStore } from "zustand";
 
 type TaskModalStore = {
   isOpen: boolean;
-  data: any;
+  data: (Task & { sectionId: string }) | null;
 };
 
 export const taskModalStore = createStore<TaskModalStore>(() => ({
