@@ -6,6 +6,7 @@ import { Home, Plus, SquareKanban } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDatabase } from "@/context/database";
 import { initialProject } from "@/schema/project";
+import { Slot } from "@radix-ui/react-slot";
 
 const Sidebar = ({ className }: ComponentProps<"aside">) => {
   const db = useDatabase();
@@ -32,19 +33,21 @@ const Sidebar = ({ className }: ComponentProps<"aside">) => {
       </NavItem>
 
       <div className="mt-4 flex items-center justify-between">
-        <p>Projects</p>
+        <p className="ml-4 font-bold text-sm">Projects</p>
         <IconButton icon={<Plus />} onClick={onCreate} />
       </div>
 
-      {projects?.rows?.map((row) => (
-        <NavItem
-          icon={<SquareKanban />}
-          path={`/project/${row.id}`}
-          key={row.id}
-        >
-          {row.doc?.title}
-        </NavItem>
-      ))}
+      <div className="space-y-2 flex flex-col items-stretch mt-1">
+        {projects?.rows?.map((row) => (
+          <NavItem
+            icon={<SquareKanban />}
+            path={`/project/${row.id}`}
+            key={row.id}
+          >
+            {row.doc?.title}
+          </NavItem>
+        ))}
+      </div>
     </aside>
   );
 };
@@ -63,12 +66,12 @@ const NavItem = ({ icon, path, isExact, children }: NavItemProps) => {
       variant="outline"
       href={path}
       className={cn(
-        "justify-start text-left gap-2 mt-2 truncate h-12",
+        "justify-start items-center text-left gap-2 truncate h-12",
         !isActive && "border-transparent"
       )}
     >
-      {icon}
-      {children}
+      <Slot className="shrink-0 w-5">{icon}</Slot>
+      <p className="truncate">{children}</p>
     </Button>
   );
 };
