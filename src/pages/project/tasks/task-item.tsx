@@ -1,6 +1,6 @@
 import { NotepadText } from "lucide-react";
 import { taskModalStore } from "./stores";
-import { Task } from "@/schema/project";
+import { Task } from "@/schema/task";
 
 type TaskItemProps = {
   sectionId: string;
@@ -10,15 +10,12 @@ type TaskItemProps = {
 const TaskItem = ({ sectionId, data }: TaskItemProps) => {
   const onDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("sectionId", sectionId);
-    e.dataTransfer.setData("id", data.id);
+    e.dataTransfer.setData("id", data._id);
   };
 
   const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    taskModalStore.setState({
-      isOpen: true,
-      data: { sectionId, ...data },
-    });
+    taskModalStore.setState({ isOpen: true, data });
   };
   return (
     <div

@@ -1,10 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useAuth } from "@/hooks/useAuth";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { API_BASEURL } from "@/lib/api";
-import { databaseSchema } from "@/lib/db";
-import { InferCreateSchema } from "@/lib/utils";
-import PouchDb from "pouchdb-browser";
 import {
   PropsWithChildren,
   createContext,
@@ -12,8 +6,15 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { API_BASEURL } from "@/lib/api";
+import { databaseSchema, onDatabaseInit } from "@/lib/db";
+import { InferCreateSchema } from "@/lib/utils";
+import PouchDb from "pouchdb-browser";
+import pouchDbFind from "pouchdb-find";
 
-const USERID_KEY_STORAGE = "db_userid";
+// Enable PouchDB Find
+PouchDb.plugin(pouchDbFind);
 
 export type DatabaseSchema = typeof databaseSchema;
 
@@ -27,8 +28,6 @@ export type Databases = {
 
 const DatabaseContext = createContext<{
   db: Databases;
-  userId: string;
-  setUserId: (id: string) => void;
   clearAll: () => Promise<void>;
 } | null>(null);
 
@@ -53,7 +52,6 @@ async function clearDatabases(db: Databases) {
 export const DatabaseProvider = ({ children }: PropsWithChildren) => {
   const auth = useAuth();
   const [db, setDb] = useState<Databases>(initDatabase());
-  const [userId, setUserId] = useLocalStorage(USERID_KEY_STORAGE);
 
   useEffect(() => {
     if (!auth.isLoggedIn) {
@@ -85,17 +83,17 @@ export const DatabaseProvider = ({ children }: PropsWithChildren) => {
     }
   }, [db, auth]);
 
+  useEffect(() => {
+    onDatabaseInit(db);
+  }, [db]);
+
   const clearAll = async () => {
     await clearDatabases(db);
-    setUserId("");
     setDb(initDatabase());
   };
 
   return (
-    <DatabaseContext.Provider
-      value={{ db, userId, setUserId, clearAll }}
-      children={children}
-    />
+    <DatabaseContext.Provider value={{ db, clearAll }} children={children} />
   );
 };
 

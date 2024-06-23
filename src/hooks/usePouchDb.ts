@@ -22,16 +22,45 @@ export const useGetAll = <T extends {}>(
     fetch();
 
     const listener = db
-      .changes({
-        live: true,
-        since: "now",
-      })
+      .changes({ live: true, since: "now" })
       .on("change", fetch);
 
     return () => {
       listener.cancel();
     };
   }, [db, fetch, options]);
+
+  return { data, refetch: fetch };
+};
+
+type FindAllOptions<T extends {}> = PouchDB.Find.FindRequest<T>;
+
+export const useFindAll = <T extends {}>(
+  db: PouchDB.Database<T>,
+  options?: FindAllOptions<T>
+) => {
+  const [data, setData] = useState<PouchDB.Find.FindResponse<T>["docs"]>([]);
+
+  const fetch = useCallback(async () => {
+    try {
+      const result = await db.find(options);
+      setData(result.docs);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [db, options]);
+
+  useEffect(() => {
+    fetch();
+
+    const listener = db
+      .changes({ live: true, since: "now" })
+      .on("change", fetch);
+
+    return () => {
+      listener.cancel();
+    };
+  }, [db, fetch]);
 
   return { data, refetch: fetch };
 };

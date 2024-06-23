@@ -1,14 +1,15 @@
 import { Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import Button, { IconButton } from "@/components/ui/button";
 import { TaskSection as TaskSectionType } from "@/schema/project";
 import { Badge } from "@/components/ui/badge";
+import { useFindAll } from "@/hooks/usePouchDb";
+import { useDatabase } from "@/context/database";
+import TaskItem from "./task-item";
 
 type TaskSectionProps = {
   data: TaskSectionType;
-  children?: React.ReactNode;
-
   onAddTask: () => void;
   onTaskMove: (
     sectionId: string,
@@ -18,14 +19,18 @@ type TaskSectionProps = {
   ) => void;
 };
 
-const TaskSection = ({
-  data,
-  children,
-  onAddTask,
-  onTaskMove,
-}: TaskSectionProps) => {
+const TaskSection = ({ data, onAddTask, onTaskMove }: TaskSectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setDragging] = useState(false);
+  const db = useDatabase();
+
+  const findTasksOptions = useMemo(() => {
+    return {
+      selector: { index: { $gt: null }, sectionId: data.id },
+      sort: ["index"],
+    };
+  }, [data.id]);
+  const { data: tasks } = useFindAll(db.tasks, findTasksOptions);
 
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -59,8 +64,6 @@ const TaskSection = ({
     onTaskMove(srcSectionId, id, data.id, index);
   };
 
-  const hasChildren = Array.isArray(children) && children.length > 0;
-
   return (
     <div
       className={cn(
@@ -75,10 +78,11 @@ const TaskSection = ({
         className="bg-muted/50 rounded-md px-6 h-10 text-center flex items-center justify-center gap-2 sticky top-0"
         style={{ backgroundColor: data.color }}
       >
-        <p className="truncate text-sm text-white">{data.section}</p>
-        {data.items?.length > 0 && (
+        <p className="truncate text-sm text-white">{data.label}</p>
+
+        {tasks?.length > 0 && (
           <Badge variant="secondary" className="px-1.5 py-0 -mr-4">
-            {data.items?.length}
+            {tasks?.length}
           </Badge>
         )}
 
@@ -90,13 +94,15 @@ const TaskSection = ({
       </div>
 
       <div ref={containerRef} className="space-y-3 w-full mt-3 pb-4">
-        {children}
+        {tasks?.map((item) => (
+          <TaskItem key={item._id} sectionId={item.sectionId} data={item} />
+        ))}
 
         <Button
           onClick={onAddTask}
           className={cn(
             "w-full gap-3",
-            hasChildren &&
+            tasks?.length > 0 &&
               "opacity-0 group-hover:opacity-100 transition-opacity"
           )}
           size="sm"

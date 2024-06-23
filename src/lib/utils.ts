@@ -44,7 +44,7 @@ export function createDbSchema<T extends object>(shape: T) {
   return z.object({
     ...shape,
     _id: z.string(),
-    _rev: z.string(),
+    _rev: z.string().optional(),
   });
 }
 
@@ -56,4 +56,4 @@ export type InferSchema<
 export type InferCreateSchema<
   T extends z.ZodObject<U>,
   U extends z.ZodRawShape = z.ZodRawShape
-> = Omit<InferSchema<T>, "_rev">;
+> = InferSchema<T>;

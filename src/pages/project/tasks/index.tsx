@@ -1,79 +1,64 @@
 import { useProject } from "../components/context";
-import { ProjectTasks } from "@/schema/project";
-import { produce } from "immer";
 import { useDatabase } from "@/context/database";
 import TaskModal from "./task-modal";
 import TaskSection from "./task-section";
-import TaskItem from "./task-item";
 import { taskModalStore } from "./stores";
-import { curTimestamp } from "@/lib/utils";
+import { curTimestamp, generateId } from "@/lib/utils";
 
 const TasksPage = () => {
   const { data } = useProject();
   const db = useDatabase();
-  const { tasks } = data;
-
-  const setTasks = async (tasks: ProjectTasks) => {
-    try {
-      await db.projects.put({ ...data, tasks });
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const onAddTask = (sectionId: string) => {
     taskModalStore.setState({
       isOpen: true,
       data: {
+        _id: generateId(),
+        projectId: data._id,
         sectionId,
-        id: "",
         title: "",
         description: "",
         createdAt: curTimestamp(),
         updatedAt: curTimestamp(),
+        index: -1,
       },
     });
   };
 
-  const onTaskMove = (
-    sectionId: string,
+  const onTaskMove = async (
+    _sectionId: string,
     id: string,
     toSectionId: string,
     toIndex: number = 0
   ) => {
-    const res = produce(tasks, (tasks) => {
-      const src = tasks.find((i) => i.id === sectionId);
-      const idx = src?.items?.findIndex((i) => i.id === id);
-      const target =
-        sectionId === toSectionId
-          ? src
-          : tasks.find((i) => i.id === toSectionId);
+    try {
+      const tasks = await db.tasks
+        .find({
+          selector: { index: { $gt: null }, sectionId: toSectionId },
+          sort: ["index"],
+        })
+        .then((i) => i.docs.filter((i) => i._id !== id));
 
-      if (!src || idx == null || idx < 0 || !target) {
-        return;
-      }
+      const task = await db.tasks.get(id);
+      tasks.splice(toIndex, 0, { ...task, sectionId: toSectionId });
 
-      const task = src.items.splice(idx, 1)[0];
-      target.items.splice(toIndex, 0, task);
-    });
-
-    setTasks(res);
+      const update = tasks.map((t, index) => ({ ...t, index }));
+      await db.tasks.bulkDocs(update);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <>
       <div className="flex-1 flex overflow-auto gap-x-4 px-4 md:px-8">
-        {tasks?.map((task) => (
+        {data.taskSections?.map((task) => (
           <TaskSection
-            key={task.section}
+            key={task.id}
             data={task}
             onAddTask={() => onAddTask(task.id)}
             onTaskMove={onTaskMove}
-          >
-            {task.items?.map((item) => (
-              <TaskItem key={item.id} sectionId={task.id} data={item} />
-            ))}
-          </TaskSection>
+          />
         ))}
       </div>
 
