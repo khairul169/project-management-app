@@ -48,15 +48,26 @@ db.users.info().then(async (info) => {
       index: { fields: ["username"] },
     });
 
-    const data = {
-      _id: ulid().toLowerCase(),
-      username: "admin",
-      password: await hashPassword("admin"),
-      name: "Admin",
-    };
+    const data = [
+      {
+        _id: ulid().toLowerCase(),
+        username: "admin",
+        password: await hashPassword("admin"),
+        name: "Admin",
+      },
+      {
+        _id: ulid().toLowerCase(),
+        username: "user",
+        password: await hashPassword("user"),
+        name: "User",
+      },
+    ] as User[];
 
-    await db.users.put(data);
-    console.log("Admin created", data);
+    for (const item of data) {
+      await db.users.put(item);
+    }
+
+    console.log("Users created", data);
   }
 });
 
@@ -74,13 +85,17 @@ app.post("/auth/login", async (req, res) => {
       throw new Error("Invalid username or password");
     }
 
-    return res.json({ user });
+    return res.json({
+      data: { token: user.username },
+    });
   } catch (error) {
-    return res.json({ error }).status(400);
+    return res
+      .status(400)
+      .json({ code: "BAD_REQUEST", message: (error as Error).message });
   }
 });
 
-app.use("/", async (req, res) => {
+app.use("/db", async (req, res) => {
   let user: User | null;
 
   try {

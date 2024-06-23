@@ -2,15 +2,13 @@ import { Suspense, useEffect, useRef } from "react";
 import MarkdownEditor, {
   MarkdownEditorRef,
 } from "@/components/ui/markdown-editor";
-import { db } from "@/lib/db";
 import { curTimestamp, debounce } from "@/lib/utils";
-import { Project } from "@/schema/project";
+import { useDatabase } from "@/context/database";
+import { useProject } from "../components/context";
 
-type ContentEditorProps = {
-  data: Project;
-};
-
-const ContentEditor = ({ data }: ContentEditorProps) => {
+const ContentPage = () => {
+  const { data } = useProject();
+  const db = useDatabase();
   const revisionRef = useRef(data._rev);
   const editorRef = useRef<MarkdownEditorRef>(null);
   const projectId = data._id;
@@ -23,8 +21,8 @@ const ContentEditor = ({ data }: ContentEditorProps) => {
 
   const onChange = debounce(async (content: string) => {
     try {
-      const project = await db.get(projectId);
-      const res = await db.put<Project>({
+      const project = await db.projects.get(projectId);
+      const res = await db.projects.put({
         ...data,
         _rev: project._rev,
         content,
@@ -37,17 +35,15 @@ const ContentEditor = ({ data }: ContentEditorProps) => {
   }, 500);
 
   return (
-    <div className="p-4 md:p-8 md:pt-2 flex-1 overflow-hidden">
-      <Suspense>
-        <MarkdownEditor
-          ref={editorRef}
-          className="h-full overflow-hidden"
-          markdown={data.content}
-          onChange={onChange}
-        />
-      </Suspense>
-    </div>
+    <Suspense>
+      <MarkdownEditor
+        ref={editorRef}
+        className="h-full overflow-hidden"
+        markdown={data.content}
+        onChange={onChange}
+      />
+    </Suspense>
   );
 };
 
-export default ContentEditor;
+export default ContentPage;

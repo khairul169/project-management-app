@@ -1,25 +1,20 @@
 import Appbar from "@/components/containers/appbar";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useDatabase } from "@/context/database";
 import { useGetAll } from "@/hooks/usePouchDb";
-import { db } from "@/lib/db";
-import { curTimestamp, dayjs, generateId } from "@/lib/utils";
-import { Project } from "@/schema/project";
+import { dayjs } from "@/lib/utils";
+import { initialProject } from "@/schema/project";
 import { Link, useNavigate } from "react-router-dom";
 
 const HomePage = () => {
-  const { data } = useGetAll<Project>(db);
+  const db = useDatabase();
+  const { data } = useGetAll(db.projects);
   const navigate = useNavigate();
 
   const onCreate = async () => {
     try {
-      const result = await db.put<Project>({
-        _id: generateId(),
-        title: "Untitled Project",
-        content: "",
-        createdAt: curTimestamp(),
-        updatedAt: curTimestamp(),
-      });
+      const result = await db.projects.put(initialProject());
       navigate(`/project/${result.id}`);
     } catch (err) {}
   };

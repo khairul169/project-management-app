@@ -1,16 +1,17 @@
 import Appbar from "@/components/containers/appbar";
 import { useGetOne } from "@/hooks/usePouchDb";
-import { db } from "@/lib/db";
-import { Project } from "@/schema/project";
-import { useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import Title from "./components/title";
 import { Skeleton } from "@/components/ui/skeleton";
-import ContentEditor from "./components/content-editor";
+import { useDatabase } from "@/context/database";
+import { ProjectContext } from "./components/context";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ViewProjectPage = () => {
   const params = useParams();
+  const db = useDatabase();
   const projectId = params.id as string;
-  const project = useGetOne<Project>(db, projectId);
+  const project = useGetOne(db.projects, projectId);
 
   return (
     <>
@@ -39,7 +40,18 @@ const ViewProjectPage = () => {
           </p>
         </div>
       ) : (
-        <ContentEditor data={project.data} />
+        <ProjectContext.Provider value={project}>
+          <div className="p-4 md:p-8 md:pt-0 flex-1 flex flex-col overflow-hidden">
+            <Tabs className="pb-4" routerPath={`/project/${projectId}`}>
+              <TabsList>
+                <TabsTrigger value="">Description</TabsTrigger>
+                <TabsTrigger value="/tasks">Tasks</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Outlet />
+          </div>
+        </ProjectContext.Provider>
       )}
     </>
   );

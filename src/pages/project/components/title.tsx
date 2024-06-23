@@ -4,20 +4,21 @@ import { Pencil, Save } from "lucide-react";
 import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Project } from "@/schema/project";
-import { db } from "@/lib/db";
 import { curTimestamp } from "@/lib/utils";
+import { useDatabase } from "@/context/database";
 
 type Props = {
   data: Project;
 };
 
 const Title = ({ data }: Props) => {
+  const db = useDatabase();
   const inputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState(false);
 
   const onSubmit = async (title: string) => {
     try {
-      await db.put({
+      await db.projects.put({
         ...data,
         _rev: data._rev!,
         title,

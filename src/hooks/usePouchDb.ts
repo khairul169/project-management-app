@@ -6,7 +6,7 @@ type GetAllOptions =
   | PouchDB.Core.AllDocsOptions;
 
 export const useGetAll = <T extends {}>(
-  db: PouchDB.Database,
+  db: PouchDB.Database<T>,
   options?: GetAllOptions
 ) => {
   const [data, setData] = useState<PouchDB.Core.AllDocsResponse<T>>();
@@ -43,7 +43,7 @@ type GetOneResponse<T extends {}> = T &
   PouchDB.Core.GetMeta;
 
 export const useGetOne = <T extends {}>(
-  db: PouchDB.Database,
+  db: PouchDB.Database<T>,
   id: string,
   options?: GetOneOptions
 ) => {
@@ -86,3 +86,5 @@ export const useGetOne = <T extends {}>(
 
   return { isLoading, error, data, refetch: fetch };
 };
+
+export type UseGetOneReturn<T extends {}> = ReturnType<typeof useGetOne<T>>;
