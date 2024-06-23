@@ -1,12 +1,11 @@
 import { Plus } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import Button, { IconButton } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/button";
 import { TaskSection as TaskSectionType } from "@/schema/project";
 import { Badge } from "@/components/ui/badge";
-import { useFindAll } from "@/hooks/usePouchDb";
-import { useDatabase } from "@/context/database";
-import TaskItem from "./task-item";
+import { useTaskListQuery } from "./queries";
+import TaskList from "./task-list";
 
 type TaskSectionProps = {
   data: TaskSectionType;
@@ -22,15 +21,7 @@ type TaskSectionProps = {
 const TaskSection = ({ data, onAddTask, onTaskMove }: TaskSectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setDragging] = useState(false);
-  const db = useDatabase();
-
-  const findTasksOptions = useMemo(() => {
-    return {
-      selector: { index: { $gt: null }, sectionId: data.id },
-      sort: ["index"],
-    };
-  }, [data.id]);
-  const { data: tasks } = useFindAll(db.tasks, findTasksOptions);
+  const tasks = useTaskListQuery(data.id);
 
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -93,25 +84,7 @@ const TaskSection = ({ data, onAddTask, onTaskMove }: TaskSectionProps) => {
         />
       </div>
 
-      <div ref={containerRef} className="space-y-3 w-full mt-3 pb-4">
-        {tasks?.map((item) => (
-          <TaskItem key={item._id} sectionId={item.sectionId} data={item} />
-        ))}
-
-        <Button
-          onClick={onAddTask}
-          className={cn(
-            "w-full gap-3",
-            tasks?.length > 0 &&
-              "opacity-0 group-hover:opacity-100 transition-opacity"
-          )}
-          size="sm"
-          variant="outline"
-        >
-          <Plus size={16} />
-          Add Task
-        </Button>
-      </div>
+      <TaskList ref={containerRef} tasks={tasks} onAddTask={onAddTask} />
     </div>
   );
 };
