@@ -6,7 +6,7 @@ import { Menu } from "lucide-react";
 const MobileSidebar = () => {
   return (
     <Sheet>
-      <SheetTrigger>
+      <SheetTrigger asChild>
         <Appbar.Action icon={<Menu />} className="md:hidden" />
       </SheetTrigger>
       <SheetContent side="left" className="p-0">

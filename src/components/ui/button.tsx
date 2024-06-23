@@ -59,15 +59,18 @@ type IconButtonProps = ButtonProps & {
   icon: React.ReactElement;
 };
 
-const IconButton = ({ icon, className, ...props }: IconButtonProps) => (
-  <Button
-    size="icon"
-    variant="ghost"
-    className={cn("flex-shrink-0", className)}
-    {...props}
-  >
-    <Slot className="size-5">{icon}</Slot>
-  </Button>
+const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
+  ({ icon, className, ...props }, ref) => (
+    <Button
+      ref={ref}
+      size="icon"
+      variant="ghost"
+      className={cn("flex-shrink-0", className)}
+      {...props}
+    >
+      <Slot className="size-5">{icon}</Slot>
+    </Button>
+  )
 );
 IconButton.displayName = "IconButton";
 

@@ -95,6 +95,10 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
+app.get("/db", (_req, res) => {
+  res.json({ status: "OK" });
+});
+
 app.use("/db", async (req, res) => {
   let user: User | null;
 

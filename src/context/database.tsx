@@ -34,7 +34,9 @@ const DatabaseContext = createContext<{
 function initDatabase() {
   const db: Record<string, PouchDB.Database> = {};
   for (const key in databaseSchema) {
-    db[key] = new PouchDb(key);
+    const instance = new PouchDb(key);
+    db[key] = instance;
+    instance.setMaxListeners(100);
   }
   return db as Databases;
 }
@@ -58,6 +60,8 @@ export const DatabaseProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
+    const cleanFuncs: (() => void)[] = [];
+
     // setup remote syncronization
     for (const dbName in db) {
       const instance = db[dbName as keyof Databases];
@@ -74,13 +78,19 @@ export const DatabaseProvider = ({ children }: PropsWithChildren) => {
         retry: true,
       });
 
-      return () => {
+      cleanFuncs.push(() => {
         try {
           sync.cancel();
           instance.remoteDb?.close();
         } catch (err) {}
-      };
+      });
     }
+
+    return () => {
+      for (const clean of cleanFuncs) {
+        clean();
+      }
+    };
   }, [db, auth]);
 
   useEffect(() => {
